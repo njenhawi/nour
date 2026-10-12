@@ -1,0 +1,916 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>טופס בקרת איכות למתכנת מטבחים</title>
+<style>
+:root{
+  --sky:#eaf7ff; --sky2:#d5efff; --blue:#1479bd; --deep:#124b78;
+  --ink:#18364d; --muted:#668197; --line:#cfe5f3; --white:#fff;
+  --ok:#16835d; --bad:#c9372c; --na:#7d93a5; --warn:#b7791f;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;background:linear-gradient(180deg,#dff3ff 0,#f5fbff 280px,#f6fbfe 100%);
+  font-family:Arial,"Noto Sans Hebrew",sans-serif;color:var(--ink);line-height:1.5}
+.page{max-width:1000px;margin:28px auto;padding:0 16px 40px}
+.hero{background:linear-gradient(135deg,#0e6eaf,#42b5ef);color:#fff;border-radius:22px;padding:26px 30px;
+  box-shadow:0 12px 28px #176da322;position:relative;overflow:hidden}
+.hero:after{content:"";position:absolute;width:230px;height:230px;border:35px solid #ffffff18;border-radius:50%;left:-60px;top:-100px}
+h1{margin:0 0 6px;font-size:clamp(25px,4vw,34px)}
+.hero p{margin:0;max-width:680px;color:#e9f7ff}
+.meta{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:18px 0}
+.field{background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.field label{display:block;color:var(--muted);font-size:12px;margin-bottom:4px;font-weight:bold}
+.field input{width:100%;border:0;outline:0;font:inherit;color:var(--ink);background:transparent;min-width:0}
+.card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:14px 18px;margin:14px 0}
+.card h3{margin:0 0 4px;font-size:16px;color:var(--deep)}
+.hint{margin:0 0 10px;font-size:13px;color:var(--muted)}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{background:#fff;color:var(--deep);border:1px solid var(--line);border-radius:99px;padding:7px 14px;font-size:14px}
+.chip:hover{background:var(--sky)}
+.chip.on{background:var(--blue);border-color:var(--blue);color:#fff}
+button{font:inherit;font-weight:bold;border:0;border-radius:10px;padding:10px 15px;cursor:pointer;transition:.15s}
+button:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+.primary{background:var(--blue);color:#fff;box-shadow:0 4px 12px #1479bd26}
+.primary:hover{background:var(--deep)}
+.primary:disabled{background:#a9c3d4;box-shadow:none;cursor:not-allowed}
+.secondary{background:#fff;color:var(--deep);border:1px solid var(--line)}
+.secondary:hover{background:var(--sky)}
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:14px 0}
+.toolbar .grow{flex:1}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:#fff}
+.seg button{border-radius:0;background:transparent;color:var(--deep);padding:8px 14px;font-weight:normal}
+.seg button.on{background:var(--deep);color:#fff}
+.saved{font-size:12px;color:var(--muted)}
+
+/* calculator */
+.wrow{display:grid;grid-template-columns:1fr 110px 2fr auto;gap:8px;align-items:center;padding:7px 0;border-bottom:1px solid #edf4f8}
+.wrow input,.tol input{font:inherit;border:1px solid var(--line);border-radius:8px;padding:8px 10px;min-width:0;width:100%;color:var(--ink)}
+.wrow input[dir=ltr]{text-align:right}
+.wres{grid-column:1/-1;font-size:13px;padding:0 2px 4px}
+.wres.ok{color:var(--ok)}.wres.bad{color:var(--bad)}.wres.none{color:var(--muted)}
+.wrm{background:transparent;color:var(--muted);padding:6px 10px}
+.tol{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);margin-top:10px;flex-wrap:wrap}
+.tol input{width:76px}
+
+/* sticky progress */
+.bar{position:sticky;top:0;z-index:5;background:#ffffffee;backdrop-filter:blur(6px);border:1px solid var(--line);border-radius:14px;padding:10px 16px;margin:14px 0;box-shadow:0 4px 14px #195d8014}
+.bar-top{display:flex;justify-content:space-between;gap:12px;align-items:center;font-weight:bold;font-size:14px;flex-wrap:wrap}
+.track{height:9px;border-radius:99px;background:#e4f2fb;overflow:hidden;margin-top:8px}
+.fill{height:100%;width:0;background:linear-gradient(90deg,#1686ca,#54c5f2);transition:width .25s}
+.verdict{font-size:13px;padding:3px 12px;border-radius:99px;font-weight:bold}
+.v-ok{background:#dcf5ea;color:var(--ok)}.v-warn{background:#fff3da;color:var(--warn)}.v-bad{background:#fde4e1;color:var(--bad)}
+
+/* sections */
+.section{background:#fff;border:1px solid var(--line);border-radius:16px;margin:14px 0;overflow:hidden;box-shadow:0 4px 14px #195d8010}
+.section-head{display:flex;align-items:center;gap:12px;background:linear-gradient(90deg,#edf9ff,#dff3ff);padding:13px 18px;cursor:pointer;user-select:none}
+.num{display:grid;place-items:center;min-width:32px;height:32px;border-radius:10px;background:var(--blue);color:#fff;font-weight:bold;font-size:14px}
+.section.done .num{background:var(--ok)}
+h2{font-size:18px;margin:0;color:var(--deep);flex:1}
+.badge{font-size:13px;color:var(--muted);font-weight:bold}
+.chev{color:var(--muted);transition:transform .2s}
+.section.collapsed .chev{transform:rotate(90deg)}
+.section.collapsed .items,.section.collapsed .addrow{display:none}
+.items{padding:4px 18px 6px}
+.item{padding:9px 0;border-bottom:1px solid #edf4f8;border-radius:8px}
+.item .row{display:flex;align-items:flex-start;gap:10px}
+.st{display:flex;gap:4px;flex:0 0 auto}
+.st button{width:34px;height:34px;padding:0;border-radius:9px;border:1px solid var(--line);background:#fff;color:#9bb0c0;font-size:16px;line-height:1}
+.st button:hover{background:var(--sky)}
+.st button.on{color:#fff}
+.st button.on[data-s=ok]{background:var(--ok);border-color:var(--ok)}
+.st button.on[data-s=bad]{background:var(--bad);border-color:var(--bad)}
+.st button.on[data-s=na]{background:var(--na);border-color:var(--na)}
+.txt{flex:1;font-size:15px;padding-top:5px;min-width:0}
+.item.ok .txt{color:#5f8196}
+.item.na .txt{color:#8fa3b2;text-decoration:line-through}
+.item.bad{background:#fff4f2}
+.item.bad .txt{color:#8f2219;font-weight:bold}
+.item.flash{animation:flash 1.3s}
+@keyframes flash{0%,60%{background:#fff2b8}100%{background:transparent}}
+.tag{display:inline-block;font-size:11px;font-weight:bold;border-radius:6px;padding:1px 7px;margin-inline-start:6px;vertical-align:middle}
+.tag.crit{background:#fde4e1;color:var(--bad)}
+.tag.calc.ok{background:#dcf5ea;color:var(--ok)}
+.tag.calc.bad{background:#fff3da;color:var(--warn)}
+.ib{background:transparent;color:var(--muted);padding:6px 8px;font-size:15px}
+.ib:hover{background:var(--sky)}
+.inote{display:block;width:100%;margin:8px 0 0;border:1px solid var(--line);border-radius:10px;padding:8px 11px;font:inherit;font-size:14px;color:var(--ink);resize:vertical;min-height:40px}
+.pstate{display:none}
+.addrow{display:flex;gap:8px;padding:8px 18px 14px}
+.addrow input{flex:1;font:inherit;border:1px dashed #9ec6e0;border-radius:10px;padding:8px 12px;min-width:0}
+.empty-note{padding:12px 18px;color:var(--muted);font-size:14px}
+
+/* summary + signoff */
+.sum-list{margin:8px 0 0;padding:0;list-style:none}
+.sum-list li{padding:2px 0}
+.jump{background:transparent;color:var(--deep);text-align:right;padding:4px 0;font-weight:normal;text-decoration:underline;text-decoration-color:#9ec6e0}
+.sum-bad .jump{color:var(--bad)}
+details summary{cursor:pointer;color:var(--deep);font-weight:bold;font-size:14px;margin-top:8px}
+.signoff{background:#fff;border:1px solid var(--line);border-radius:16px;padding:18px;margin-top:18px}
+.signoff h2{margin-bottom:14px}
+.sign-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:14px}
+.sign-line{border-bottom:1px solid #8eacbf;padding:8px 0 12px;color:var(--muted);font-size:13px}
+.signrow{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:10px 0}
+.signrow input{font:inherit;border:1px solid var(--line);border-radius:10px;padding:10px 12px;min-width:200px}
+.stamp{background:#dcf5ea;color:var(--ok);border:1px solid #a9dcc5;border-radius:12px;padding:10px 14px;font-weight:bold;margin:10px 0}
+.lock{font-size:13px;color:var(--muted)}
+#general{width:100%;min-height:70px;border:1px solid var(--line);border-radius:10px;padding:9px 11px;font:inherit;resize:vertical}
+.lbl{display:block;font-size:12px;color:var(--muted);font-weight:bold;margin:12px 0 5px}
+.modal{position:fixed;inset:0;background:#124b7873;display:grid;place-items:center;z-index:30;padding:16px}
+.mbox{background:#fff;border-radius:18px;padding:20px;width:100%;max-width:440px;display:flex;flex-direction:column;gap:10px;box-shadow:0 18px 50px #0a2a4a55;max-height:92vh;overflow:auto}
+.mbox h3{margin:0;color:var(--deep);font-size:20px}
+.mbox button{width:100%}
+.mbox .hint{margin:2px 0 0;font-size:12px}
+.mstat{margin:0;font-size:14px;color:var(--muted);min-height:20px}
+.mstat a{color:var(--blue);font-weight:bold}
+.mwa{display:flex;flex-direction:column;gap:8px;border:1px solid var(--line);border-radius:12px;padding:10px;background:var(--sky)}
+.mwa input{font:inherit;border:1px solid var(--line);border-radius:10px;padding:10px 12px;text-align:right;width:100%}
+.ghost{background:transparent;color:var(--muted)}
+.toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:var(--deep);color:#fff;padding:10px 18px;border-radius:12px;font-size:14px;z-index:20;opacity:0;pointer-events:none;transition:opacity .25s}
+.toast.show{opacity:1}
+.footer{text-align:center;color:var(--muted);font-size:12px;margin-top:18px}
+.printonly{display:none}
+
+@media(max-width:680px){
+  .page{margin:12px auto;padding:0 10px 25px}.hero{padding:20px}
+  .meta{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .sign-grid{grid-template-columns:1fr}
+  .wrow{grid-template-columns:1fr 1fr}.wrow input:nth-child(3){grid-column:1/-1}
+  .items{padding:2px 12px 4px}.section-head{padding:11px 14px}
+  .st button{width:38px;height:38px}
+}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+@media print{
+  @page{size:A4;margin:12mm}
+  body{background:#fff;color:#172f42;font-size:10pt;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .page{max-width:none;margin:0;padding:0}
+  .hero{box-shadow:none;border-radius:10px;padding:14px 18px}
+  .no-print,.toolbar,.addrow,.chev,.ib,.wrm,.lock,.signrow button{display:none!important}
+  .bar{position:static;box-shadow:none;margin:8px 0;padding:6px 10px}
+  .meta{margin:8px 0;gap:6px}.field{padding:6px 8px}
+  .card{padding:8px 12px;margin:8px 0}
+  .chip:not(.on){display:none}
+  .chip{padding:2px 10px;font-size:9pt}
+  .section{box-shadow:none;margin:8px 0;border-radius:8px}
+  .section.collapsed .items{display:block!important}
+  .section-head{padding:6px 12px}.num{min-width:24px;height:24px}
+  h2{font-size:12pt}
+  .items{padding:2px 12px 4px}
+  .item{break-inside:avoid;padding:4px 0}
+  .st{display:none}
+  .pstate{display:inline-block;min-width:78px;font-size:9pt;font-weight:bold;color:#445}
+  .item.ok .pstate{color:var(--ok)}.item.bad .pstate{color:var(--bad)}
+  .item .row{gap:6px}
+  .txt{font-size:9pt;padding-top:0}
+  .inote:not(.has){display:none!important}
+  .inote.has{border:0;border-inline-start:2px solid #9ec6e0;border-radius:0;padding:2px 8px;font-size:9pt;resize:none;min-height:0;overflow:visible}
+  .wrow input{border:0;padding:2px}
+  #calcCard.empty{display:none}
+  .signoff{break-inside:avoid;padding:12px}
+  .signrow input{border:0;border-bottom:1px solid #8eacbf;border-radius:0}
+  details{display:block}
+  details:not([open]) > *:not(summary){display:block}
+  .footer{margin-top:8px}
+  .printonly{display:block}
+}
+</style>
+</head>
+<body>
+<div class="page">
+  <header class="hero">
+    <h1>טופס בקרת איכות למתכנת מטבחים</h1>
+    <p id="lead">בדיקות חיוניות לפני אישור התוכנית, הפקת הזמנות והעברה לייצור.</p>
+  </header>
+
+  <section class="meta" aria-label="פרטי הזמנה">
+    <div class="field"><label for="client">שם הלקוח</label><input id="client" placeholder="הקלד שם לקוח"></div>
+    <div class="field"><label for="order">מספר הזמנה</label><input id="order" placeholder="מספר הזמנה"></div>
+    <div class="field"><label for="programmer">שם המתכנת</label><input id="programmer" placeholder="שם מלא"></div>
+    <div class="field"><label for="date">תאריך</label><input id="date" type="date"></div>
+  </section>
+
+  <section class="card">
+    <h3>מאפייני המטבח</h3>
+    <p class="hint no-print">סמן מה קיים במטבח הזה. הטופס יציג רק סעיפים שרלוונטיים, והשאר לא ייספרו.</p>
+    <div id="chips" class="chips"></div>
+  </section>
+
+  <section class="card" id="calcCard">
+    <h3>סכומון קירות</h3>
+    <p class="hint no-print">הזן אורך קיר ורוחבי יחידות (מופרדים ב-+ או ברווח, בסנטימטרים). הפער מחושב מיד.</p>
+    <div id="walls"></div>
+    <div class="tol no-print">
+      <button class="secondary" id="addWall">+ הוסף קיר</button>
+      <span>סטייה מותרת (ס״מ):</span><input id="tol" type="number" step="0.1" min="0" dir="ltr">
+    </div>
+  </section>
+
+  <div class="bar" id="bar">
+    <div class="bar-top"><span id="progText"></span><span class="verdict" id="verdictChip"></span></div>
+    <div class="track"><div class="fill" id="fill"></div></div>
+  </div>
+
+  <div class="toolbar no-print">
+    <button class="primary" id="btnShare">📤 הדפס / שלח PDF</button>
+    <button class="secondary" id="btnSave">⬇️ שמור דוח HTML</button>
+    <button class="secondary" id="btnAllOk">✓ סמן את הפתוחים כתקין</button>
+    <button class="secondary" id="btnNew">↺ טופס חדש</button>
+    <span class="grow"></span>
+    <span class="saved" id="savedAt"></span>
+  </div>
+  <div class="toolbar no-print">
+    <div class="seg" id="filters" role="group" aria-label="סינון">
+      <button data-f="all" class="on">הכל</button>
+      <button data-f="open">פתוחים</button>
+      <button data-f="bad">בעיות</button>
+    </div>
+    <span class="saved">✓ תקין · ! בעיה · – לא רלוונטי</span>
+  </div>
+
+  <main id="sections"></main>
+
+  <section class="card" id="summary"></section>
+
+  <section class="signoff">
+    <h2>אישור המתכנת והעברה לייצור</h2>
+    <div id="stamp" class="stamp" hidden></div>
+    <div class="signrow no-print-inputs">
+      <input id="signer" placeholder="שם המאשר">
+      <button class="primary" id="btnApprove">אשר והעבר לייצור</button>
+    </div>
+    <div class="lock" id="lockMsg"></div>
+    <div class="sign-grid printonly">
+      <div class="sign-line">שם המאשר: __________________________</div>
+      <div class="sign-line">חתימה: ______________________________</div>
+      <div class="sign-line">תאריך אישור: ________________________</div>
+    </div>
+    <label class="lbl" for="general">הערות כלליות</label>
+    <textarea id="general" placeholder="הערות כלליות, חריגות או דברים שצריך לזכור לייצור..."></textarea>
+  </section>
+  <div class="footer">טופס בקרת איכות לתכנון מטבחים</div>
+</div>
+<div class="toast" id="toast" role="status"></div>
+<div class="modal no-print" id="modal" hidden>
+  <div class="mbox" role="dialog" aria-modal="true" aria-labelledby="mtitle">
+    <h3 id="mtitle">הדפסה ושליחה</h3>
+    <p class="mstat" id="mstat" aria-live="polite"></p>
+    <button class="primary" id="mShare">📤 שתף PDF (WhatsApp ועוד)</button>
+    <div class="mwa">
+      <input id="waPhone" type="tel" dir="ltr" placeholder="מספר WhatsApp, למשל 0501234567" aria-label="מספר WhatsApp">
+      <button class="secondary" id="mWa">💬 פתח שיחה ב-WhatsApp</button>
+    </div>
+    <button class="secondary" id="mDl">⬇️ הורד PDF</button>
+    <button class="secondary" id="mPrint">🖨️ הדפס</button>
+    <p class="hint">בנייד, "שתף PDF" פותח את חלון השיתוף וה-PDF מצורף ל-WhatsApp. במחשב, "פתח שיחה" מוריד את ה-PDF ופותח את WhatsApp, ואז מצרפים את הקובץ ידנית (WhatsApp לא מאפשר לצרף קובץ אוטומטית). מספר שמתחיל ב-0 נחשב ישראלי.</p>
+    <button class="ghost" id="mClose">סגור</button>
+  </div>
+</div>
+
+<script type="application/json" id="embedded">null</script>
+<script>
+/* ---------- נתוני הטופס ---------- */
+const I=(id,t,o)=>Object.assign({id,t},o||{});
+const SECTIONS=[
+{title:"מדידות, תשתיות וסכומון",items:[
+  I('m1',"מידות הקירות, גובה התקרה, חלונות, דלתות ונישות נבדקו בשטח",{c:1}),
+  I('m2',"נקודות חשמל, מים, ביוב ואוורור תואמות לתוכנית",{c:1}),
+  I('m2g',"נקודת גז ומרחקי בטיחות מהכיריים נבדקו",{c:1,need:'gas'}),
+  I('m3',"סכום רוחבי היחידות תואם למידות הקיר, כולל פילרים ודפנות גמר",{c:1,calc:1}),
+  I('m4',"גובה, רוחב ועומק של כל יחידה וארון נבדקו"),
+  I('m5',"קירות עקומים, פינות שאינן 90° ופערי השלמה נבדקו"),
+  I('m6',"נתיב הכנסת הארונות לבית נבדק (מעלית, פתחים, מדרגות)")
+]},
+{title:"מבנה וחומרי גוף",items:[
+  I('b1',"סוג ועובי חומר הגוף, גב הארון, המדפים והקנטים הוגדרו נכון",{c:1}),
+  I('b2',"גובה ארונות תחתונים ועליונים, סוקל ומשטח נבדקו",{c:1}),
+  I('b2t',"ארונות גבוהים: גובה, יציבות וחיבור לקיר או לתקרה נבדקו",{need:'tall'}),
+  I('b3',"חלוקות פנימיות, מדפים, חיזוקים ותמיכות נבדקו"),
+  I('b4',"כיוון סיבי העץ והדוגמה ברצף בין הארונות לחזיתות"),
+  I('b5',"רגליות, פילוס ופרופיל הסוקל הוגדרו")
+]},
+{title:"חזיתות, ידיות וסוגי פתיחה",items:[
+  I('f1',"דגם, חומר, עובי, צבע וגימור החזיתות אושרו",{c:1}),
+  I('f2',"מידות החזיתות והמרווחים בין הדלתות נבדקו"),
+  I('f3',"סוג הפתיחה הוגדר: ידית, לחיצה או פרופיל במה",{c:1}),
+  I('f4',"ידיות: דגם, גימור, מיקום וכיווני קידוח נבדקו",{need:'handle'}),
+  I('f5',"פתיחה בלחיצה: המנגנון מתאים למשקל הדלת ויש מרווח לפתיחה",{need:'push'}),
+  I('f6',"פרופיל במה: סוג, מיקום, גימור וחיבור בפינות נבדקו",{need:'profile'}),
+  I('f7',"כיווני פתיחת כל הדלתות נבדקו מול התכנון והמרווחים"),
+  I('f8',"חזיתות מוזמנות: מידות, כמויות, צבע ומועד אספקה אושרו מול הספק",{c:1,need:'outsourced'})
+]},
+{title:"מגירות ופרזול",items:[
+  I('d1',"סוג מערכת המגירות, היצרן ודגם המסילות הוגדרו"),
+  I('d2',"מספר המגירות, חלוקת הגבהים, הרוחבים והעומקים נבדקו"),
+  I('d3',"צירים, מסילות, טריקה שקטה ופתיחה בלחיצה תואמים לתכנון")
+]},
+{title:"ויטרינות, מכשירי חשמל ואביזרים",items:[
+  I('a1',"ויטרינות: מסגרת, סוג זכוכית, מידות, חלוקה ותאורה נבדקו",{need:'glass'}),
+  I('a2',"מידות נישות למקרר, תנור, מיקרוגל, מדיח וכיריים תואמות למפרט המכשירים",{c:1}),
+  I('a3',"פתחים, אוורור ונגישות לחיבורים נבדקו"),
+  I('a4',"אי או חצי אי: מידות, יציבות, מעברים ונקודות חשמל נבדקו",{need:'island'}),
+  I('a5',"תאורה ונקודות חשמל פנימיות בארונות הוגדרו")
+]},
+{title:"הזמנות, בדיקה סופית ואישור לייצור",items:[
+  I('o1',"כל החזיתות, הזכוכיות והחלקים המיוחדים מופיעים ברשימת ההזמנה עם מידות וכמויות",{c:1}),
+  I('o2',"משטח עבודה, פתחים לכיור ולכיריים, סוקל ודפנות גמר נבדקו",{c:1}),
+  I('o3',"המודל, החומרים, הקנטים, הפרזול, הכמויות ותוכניות הייצור נבדקו",{c:1}),
+  I('o4',"התוכנית אושרה בחתימת הלקוח וגרסת התוכנית נרשמה",{c:1}),
+  I('o5',"התוכנית הסופית נשמרה וכל ההזמנות נבדקו",{c:1})
+]}
+];
+const CHIPS=[['handle','ידיות'],['push','פתיחה בלחיצה'],['profile','פרופיל במה'],['glass','ויטרינות'],
+  ['island','אי / חצי אי'],['tall','ארונות גבוהים'],['gas','גז'],['outsourced','חזיתות מוזמנות מבחוץ']];
+
+/* ---------- מצב ושמירה ---------- */
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const today=()=>new Date().toLocaleDateString('en-CA');
+const blank=()=>({id:null,meta:{client:'',order:'',programmer:'',date:today()},profile:{},st:{},notes:{},shown:{},
+  custom:{},walls:[{name:'',len:'',units:''}],tol:0.5,general:'',signer:'',approved:null,collapsed:{},ts:0});
+let S=blank(), filter='all', key='kqc:draft', items=[], map={}, timer=null;
+
+function load(){
+  let emb=null, ls=null;
+  try{emb=JSON.parse($('#embedded').textContent)}catch(e){}
+  if(emb&&emb.id) key='kqc:'+emb.id;
+  try{ls=JSON.parse(localStorage.getItem(key))}catch(e){}
+  const pick=(ls&&(!emb||(ls.ts||0)>=(emb.ts||0)))?ls:emb;
+  if(pick) S=Object.assign(blank(),pick);
+  if(!S.walls||!S.walls.length) S.walls=[{name:'',len:'',units:''}];
+}
+function persist(){
+  S.ts=Date.now();
+  try{localStorage.setItem(key,JSON.stringify(S));
+    $('#savedAt').textContent='נשמר אוטומטית '+new Date().toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'});
+  }catch(e){$('#savedAt').textContent='שמירה אוטומטית לא זמינה, השתמש ב״שמור דוח״'}
+}
+function save(){clearTimeout(timer);timer=setTimeout(persist,300)}
+function toast(msg){const t=$('#toast');t.textContent=msg;t.classList.add('show');clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove('show'),2600)}
+function touch(){ // שינוי מהותי מבטל אישור קודם
+  if(S.approved){S.approved=null;toast('האישור בוטל כי בוצע שינוי בטופס')}
+}
+
+/* ---------- בניית הטופס ---------- */
+const relevant=it=>!it.need||!!S.profile[it.need];
+function build(){
+  items=[];map={};
+  const root=$('#sections');root.innerHTML='';
+  SECTIONS.forEach((sec,si)=>{
+    const list=sec.items.map(x=>Object.assign({si},x)).concat((S.custom[si]||[]).map(x=>({id:x.id,t:x.t,si,custom:1})));
+    const art=document.createElement('section');art.className='section';art.dataset.si=si;
+    art.innerHTML=`<div class="section-head" role="button" tabindex="0" aria-label="פתח או סגור קטגוריה">
+      <div class="num">${si+1}</div><h2>${esc(sec.title)}</h2><span class="badge"></span><span class="chev">▾</span></div>
+      <div class="items"></div>
+      <div class="addrow no-print"><input placeholder="הוסף סעיף משלך לקטגוריה הזו" aria-label="סעיף חדש"><button class="secondary">+ הוסף</button></div>`;
+    const box=art.querySelector('.items');
+    list.forEach(it=>{
+      items.push(it);map[it.id]=it;
+      const el=document.createElement('div');el.className='item';el.dataset.id=it.id;
+      el.innerHTML=`<div class="row">
+        <div class="st"><button data-s="ok" title="תקין" aria-label="תקין">✓</button><button data-s="bad" title="בעיה" aria-label="בעיה">!</button><button data-s="na" title="לא רלוונטי" aria-label="לא רלוונטי">–</button></div>
+        <span class="pstate"></span>
+        <div class="txt">${esc(it.t)}${it.c?'<span class="tag crit">קריטי</span>':''}${it.calc?'<span class="tag calc" hidden></span>':''}</div>
+        <button class="ib nb" title="הערה" aria-label="הערה">💬</button>${it.custom?'<button class="ib rm" title="מחק סעיף" aria-label="מחק סעיף">✕</button>':''}
+      </div>
+      <textarea class="inote" rows="1" aria-label="הערה לסעיף"></textarea>`;
+      const ta=el.querySelector('.inote');ta.value=S.notes[it.id]||'';
+      it.el=el;box.append(el);
+    });
+    root.append(art);
+  });
+  $('#lead').textContent=`${items.length} בדיקות לפני אישור התוכנית, הפקת הזמנות והעברה לייצור. הרשימה מתאימה את עצמה למאפייני המטבח.`;
+}
+function grow(ta){ta.style.height='auto';ta.style.height=Math.max(40,ta.scrollHeight+2)+'px'}
+
+function stats(){
+  const r={ok:0,bad:0,na:0,open:0,openCrit:0,total:0,bads:[],crits:[],opens:[]};
+  items.forEach(it=>{
+    if(!relevant(it))return;
+    r.total++;const s=S.st[it.id];
+    if(s==='ok')r.ok++;else if(s==='na')r.na++;
+    else if(s==='bad'){r.bad++;r.bads.push(it)}
+    else{r.open++;r.opens.push(it);if(it.c){r.openCrit++;r.crits.push(it)}}
+  });
+  return r;
+}
+
+/* ---------- סנכרון תצוגה ---------- */
+function sync(){
+  items.forEach(it=>{
+    const el=it.el,s=S.st[it.id],rel=relevant(it);
+    el.className='item'+(s?' '+s:'');
+    el.hidden=!(rel&&(filter==='all'||(filter==='open'&&!s)||(filter==='bad'&&s==='bad')));
+    el.querySelectorAll('.st button').forEach(b=>b.classList.toggle('on',b.dataset.s===s));
+    el.querySelector('.pstate').textContent=s==='ok'?'✓ תקין':s==='bad'?'✗ בעיה':s==='na'?'— לא רלוונטי':'☐ לא נבדק';
+    const ta=el.querySelector('.inote'),has=!!(S.notes[it.id]||'').trim();
+    ta.classList.toggle('has',has);
+    ta.hidden=!(s==='bad'||has||S.shown[it.id]);
+    ta.placeholder=s==='bad'?'מה הבעיה ומה צריך לתקן?':'הערה...';
+    if(!ta.hidden)grow(ta);
+  });
+  document.querySelectorAll('.section').forEach(sec=>{
+    const si=+sec.dataset.si,mine=items.filter(i=>i.si===si&&relevant(i));
+    const done=mine.filter(i=>S.st[i.id]==='ok'||S.st[i.id]==='na').length;
+    sec.querySelector('.badge').textContent=`${done}/${mine.length}`;
+    sec.classList.toggle('done',mine.length>0&&done===mine.length);
+    sec.classList.toggle('collapsed',!!S.collapsed[si]);
+    const anyVisible=items.some(i=>i.si===si&&!i.el.hidden);
+    sec.hidden=!anyVisible&&filter!=='all';
+  });
+  document.querySelectorAll('.chip').forEach(c=>c.classList.toggle('on',!!S.profile[c.dataset.k]));
+  document.querySelectorAll('#filters button').forEach(b=>b.classList.toggle('on',b.dataset.f===filter));
+  renderSummary();
+}
+function renderSummary(){
+  const r=stats(),done=r.ok+r.na,pct=r.total?Math.round(done/r.total*100):0;
+  $('#progText').textContent=`${done} מתוך ${r.total} סעיפים (${pct}%)`;
+  $('#fill').style.width=pct+'%';
+  const ready=r.bad===0&&r.openCrit===0;
+  let cls,txt;
+  if(r.bad>0){cls='v-bad';txt=`${r.bad} בעיות פתוחות`}
+  else if(r.openCrit>0){cls='v-warn';txt=`${r.openCrit} סעיפים קריטיים ממתינים`}
+  else if(r.open>0){cls='v-warn';txt=`${r.open} סעיפים לא נבדקו`}
+  else{cls='v-ok';txt='הכל נבדק, מוכן לאישור'}
+  const chip=$('#verdictChip');chip.className='verdict '+cls;chip.textContent=txt;
+
+  let h=`<h3>סיכום לפני אישור</h3><p class="hint">תקין: ${r.ok} · לא רלוונטי: ${r.na} · בעיות: ${r.bad} · לא נבדקו: ${r.open}</p>`;
+  if(r.bads.length)h+=`<div class="sum-bad"><b>בעיות פתוחות</b><ul class="sum-list">${r.bads.map(i=>`<li><button class="jump" data-id="${i.id}">${esc(i.t)}${S.notes[i.id]?' ← '+esc(S.notes[i.id]):''}</button></li>`).join('')}</ul></div>`;
+  if(r.crits.length)h+=`<details class="no-print"><summary>${r.crits.length} סעיפים קריטיים שעדיין לא נבדקו</summary><ul class="sum-list">${r.crits.map(i=>`<li><button class="jump" data-id="${i.id}">${esc(i.t)}</button></li>`).join('')}</ul></details>`;
+  if(!r.bads.length&&!r.crits.length)h+=`<p style="margin:0;color:var(--ok);font-weight:bold">אין בעיות פתוחות ואין סעיפים קריטיים שממתינים.</p>`;
+  $('#summary').innerHTML=h;
+
+  const btn=$('#btnApprove'),st=$('#stamp');
+  if(S.approved){
+    st.hidden=false;st.textContent=`✅ אושר לייצור על ידי ${S.approved.name} · ${S.approved.time}`;
+    btn.textContent='בטל אישור';btn.disabled=false;$('#lockMsg').textContent='';
+  }else{
+    st.hidden=true;btn.textContent='אשר והעבר לייצור';btn.disabled=!ready;
+    $('#lockMsg').textContent=ready?(r.open>0?'ניתן לאשר, אך יש סעיפים לא קריטיים שלא נבדקו.':''):'האישור נעול עד שכל הבעיות נפתרו וכל הסעיפים הקריטיים הושלמו.';
+  }
+}
+
+/* ---------- סכומון קירות ---------- */
+const fmt=x=>Math.round(x*100)/100;
+function calcWall(w){
+  const nums=String(w.units||'').split(/[+\s,;]+/).map(parseFloat).filter(n=>!isNaN(n));
+  const len=parseFloat(w.len);
+  if(isNaN(len)||!nums.length)return{state:'none',text:'הזן אורך קיר ורוחבי יחידות'};
+  const sum=nums.reduce((a,b)=>a+b,0),diff=len-sum,tol=parseFloat(S.tol)||0;
+  if(Math.abs(diff)<=tol+1e-9)return{state:'ok',text:`סכום ${fmt(sum)} ס״מ מתוך ${fmt(len)}: תואם (פער ${fmt(diff)})`};
+  if(diff>0)return{state:'bad',text:`סכום ${fmt(sum)} ס״מ מתוך ${fmt(len)}: נשארו ${fmt(diff)} ס״מ ללא כיסוי`};
+  return{state:'bad',text:`סכום ${fmt(sum)} ס״מ מתוך ${fmt(len)}: חריגה של ${fmt(-diff)} ס״מ`};
+}
+function renderWalls(){
+  const box=$('#walls');
+  box.innerHTML=S.walls.map((w,i)=>`<div class="wrow" data-i="${i}">
+    <input data-k="name" placeholder="שם הקיר" value="${esc(w.name)}" aria-label="שם הקיר">
+    <input data-k="len" dir="ltr" inputmode="decimal" placeholder="אורך" value="${esc(w.len)}" aria-label="אורך הקיר בסנטימטרים">
+    <input data-k="units" dir="ltr" placeholder="60+80+45.5+..." value="${esc(w.units)}" aria-label="רוחבי היחידות">
+    <button class="wrm" title="מחק קיר" aria-label="מחק קיר">✕</button><div class="wres"></div></div>`).join('');
+  $('#tol').value=S.tol;
+  updateCalc();
+}
+function updateCalc(){
+  let any=false,allOk=true,anyData=false;
+  document.querySelectorAll('.wrow').forEach(row=>{
+    const w=S.walls[+row.dataset.i],r=calcWall(w),el=row.querySelector('.wres');
+    el.className='wres '+r.state;el.textContent=r.text;
+    if(r.state!=='none'){any=true;if(r.state==='bad')allOk=false}
+    if(w.name||w.len||w.units)anyData=true;
+  });
+  $('#calcCard').classList.toggle('empty',!anyData);
+  document.querySelectorAll('.tag.calc').forEach(t=>{
+    t.hidden=!any;t.className='tag calc '+(allOk?'ok':'bad');
+    t.textContent=allOk?'✓ אומת בסכומון':'⚠ אי התאמה בסכומון';
+  });
+}
+
+/* ---------- אירועים ---------- */
+function setStatus(id,s){
+  if(S.st[id]===s)delete S.st[id];else S.st[id]=s;
+  touch();sync();save();
+}
+$('#sections').addEventListener('click',e=>{
+  const sec=e.target.closest('.section');if(!sec)return;
+  const si=+sec.dataset.si,item=e.target.closest('.item');
+  const sb=e.target.closest('.st button');
+  if(sb&&item){setStatus(item.dataset.id,sb.dataset.s);return}
+  if(e.target.closest('.nb')&&item){
+    const id=item.dataset.id;S.shown[id]=!S.shown[id];sync();
+    if(S.shown[id])item.querySelector('.inote').focus();save();return}
+  if(e.target.closest('.rm')&&item){
+    const id=item.dataset.id;
+    S.custom[si]=(S.custom[si]||[]).filter(x=>x.id!==id);
+    delete S.st[id];delete S.notes[id];delete S.shown[id];
+    touch();build();sync();save();return}
+  if(e.target.closest('.addrow button')){addCustom(sec);return}
+  if(e.target.closest('.section-head')){S.collapsed[si]=!S.collapsed[si];sync();save()}
+});
+$('#sections').addEventListener('keydown',e=>{
+  const sec=e.target.closest('.section');if(!sec)return;
+  if(e.key==='Enter'&&e.target.matches('.addrow input'))addCustom(sec);
+  if((e.key==='Enter'||e.key===' ')&&e.target.matches('.section-head')){e.preventDefault();e.target.click()}
+});
+$('#sections').addEventListener('input',e=>{
+  if(e.target.matches('.inote')){
+    const id=e.target.closest('.item').dataset.id;S.notes[id]=e.target.value;
+    e.target.classList.toggle('has',!!e.target.value.trim());grow(e.target);save();
+  }
+});
+function addCustom(sec){
+  const inp=sec.querySelector('.addrow input'),t=inp.value.trim();
+  if(!t){inp.focus();return}
+  const si=+sec.dataset.si;
+  (S.custom[si]=S.custom[si]||[]).push({id:'x'+Date.now().toString(36)+Math.random().toString(36).slice(2,5),t});
+  touch();build();sync();save();
+  document.querySelector(`.section[data-si="${si}"] .addrow input`).focus();
+}
+$('#chips').addEventListener('click',e=>{
+  const c=e.target.closest('.chip');if(!c)return;
+  S.profile[c.dataset.k]=!S.profile[c.dataset.k];touch();sync();save();
+});
+$('#filters').addEventListener('click',e=>{
+  const b=e.target.closest('button');if(!b)return;filter=b.dataset.f;sync();
+});
+$('#summary').addEventListener('click',e=>{
+  const b=e.target.closest('.jump');if(!b)return;
+  const it=map[b.dataset.id];if(!it)return;
+  filter='all';S.collapsed[it.si]=false;sync();
+  it.el.scrollIntoView({behavior:'smooth',block:'center'});
+  it.el.classList.add('flash');setTimeout(()=>it.el.classList.remove('flash'),1400);
+});
+$('#walls').addEventListener('input',e=>{
+  const row=e.target.closest('.wrow');if(!row||!e.target.dataset.k)return;
+  S.walls[+row.dataset.i][e.target.dataset.k]=e.target.value;updateCalc();touch();renderSummary();save();
+});
+$('#walls').addEventListener('click',e=>{
+  const row=e.target.closest('.wrow');if(!row||!e.target.closest('.wrm'))return;
+  S.walls.splice(+row.dataset.i,1);if(!S.walls.length)S.walls.push({name:'',len:'',units:''});
+  renderWalls();save();
+});
+$('#addWall').onclick=()=>{S.walls.push({name:'',len:'',units:''});renderWalls();
+  const rows=document.querySelectorAll('.wrow');rows[rows.length-1].querySelector('input').focus();save()};
+$('#tol').oninput=e=>{S.tol=e.target.value;updateCalc();save()};
+
+['client','order','programmer','date'].forEach(k=>{$('#'+k).oninput=e=>{S.meta[k]=e.target.value;save()}});
+$('#general').oninput=e=>{S.general=e.target.value;save()};
+$('#signer').oninput=e=>{S.signer=e.target.value;save()};
+
+$('#btnApprove').onclick=()=>{
+  if(S.approved){S.approved=null;sync();save();return}
+  const r=stats();if(r.bad||r.openCrit)return;
+  const name=($('#signer').value||'').trim();
+  if(!name){toast('הזן שם מאשר');$('#signer').focus();return}
+  if(r.open>0&&!confirm(`יש ${r.open} סעיפים לא קריטיים שלא נבדקו. לאשר בכל זאת?`))return;
+  S.approved={name,time:new Date().toLocaleString('he-IL',{dateStyle:'short',timeStyle:'short'})};
+  sync();persist();toast('המטבח אושר להעברה לייצור');
+};
+$('#btnAllOk').onclick=()=>{
+  const open=items.filter(i=>relevant(i)&&!S.st[i.id]);
+  if(!open.length){toast('אין סעיפים פתוחים');return}
+  if(!confirm(`לסמן ${open.length} סעיפים פתוחים כתקין?`))return;
+  open.forEach(i=>S.st[i.id]='ok');touch();sync();save();
+};
+$('#btnNew').onclick=()=>{
+  if(!confirm('למחוק את כל הנתונים ולהתחיל טופס חדש? מומלץ לשמור דוח לפני כן.'))return;
+  const id=S.id;S=blank();S.id=id;filter='all';
+  initUI();persist();toast('נפתח טופס חדש');
+};
+let prevFilter='all';
+window.addEventListener('beforeprint',()=>{prevFilter=filter;filter='all';sync();document.querySelectorAll('.inote.has').forEach(grow)});
+window.addEventListener('afterprint',()=>{filter=prevFilter;sync()});
+
+$('#btnSave').onclick=()=>{
+  if(!S.id)S.id=Math.random().toString(36).slice(2,10);
+  S.ts=Date.now();
+  const clone=document.documentElement.cloneNode(true);
+  clone.querySelector('#embedded').textContent=JSON.stringify(S).replace(/</g,'\\u003c');
+  ['#sections','#walls','#chips','#summary'].forEach(s=>{clone.querySelector(s).innerHTML=''});
+  clone.querySelector('#toast').className='toast';
+  const html='<!DOCTYPE html>\n'+clone.outerHTML;
+  const blob=new Blob([html],{type:'text/html;charset=utf-8'});
+  const nm=('בקרת-איכות-'+(S.meta.order||S.meta.client||'מטבח')+'-'+(S.meta.date||today())).replace(/[\\/:*?"<>|\s]+/g,'-')+'.html';
+  dl(blob,nm);
+  persist();toast('הדוח נשמר עם כל הסימונים וההערות');
+};
+
+/* ---------- יצירת PDF (ציור על קנבס והטמעה בקובץ PDF, בלי ספריות חיצוניות) ---------- */
+const PW=1240,PH=1754,M=64,CW=PW-2*M,FONT='Arial,"Noto Sans Hebrew","Segoe UI",sans-serif';
+let pdfPages=[],g=null,py=0;
+function newPage(){
+  const c=document.createElement('canvas');c.width=PW;c.height=PH;
+  g=c.getContext('2d');g.fillStyle='#fff';g.fillRect(0,0,PW,PH);
+  g.direction='rtl';g.textBaseline='alphabetic';pdfPages.push(c);py=M;
+}
+const ensure=h=>{if(py+h>PH-96)newPage()};
+const setFont=(sz,w)=>{g.font=`${w||'normal'} ${sz}px ${FONT}`};
+function rrect(x,y,w,h,r){g.beginPath();g.moveTo(x+r,y);g.arcTo(x+w,y,x+w,y+h,r);g.arcTo(x+w,y+h,x,y+h,r);g.arcTo(x,y+h,x,y,r);g.arcTo(x,y,x+w,y,r);g.closePath()}
+function box(x,y,w,h,r,fill,stroke,lw){rrect(x,y,w,h,r);if(fill){g.fillStyle=fill;g.fill()}if(stroke){g.strokeStyle=stroke;g.lineWidth=lw||2;g.stroke()}}
+function txt(s,xr,yb,sz,col,wt,al){setFont(sz,wt);g.fillStyle=col;g.textAlign=al||'right';g.fillText(s,xr,yb)}
+function wrap(text,maxW,sz,w){
+  setFont(sz,w);const out=[];
+  String(text).split('\n').forEach(par=>{
+    const words=par.split(/\s+/).filter(Boolean);let cur='';
+    if(!words.length){out.push('');return}
+    words.forEach(wd=>{const t=cur?cur+' '+wd:wd;
+      if(cur&&g.measureText(t).width>maxW){out.push(cur);cur=wd}else cur=t});
+    out.push(cur);
+  });
+  return out;
+}
+function fit(s,maxW,sz,wt,min){
+  let z=sz;setFont(z,wt);
+  while(g.measureText(s).width>maxW&&z>(min||16)){z--;setFont(z,wt)}
+  while(g.measureText(s).width>maxW&&s.length>1){s=s.slice(0,-1);if(g.measureText(s+'…').width<=maxW){s+='…';break}}
+  return{s,z};
+}
+function icon(kind,cx,cy,sc){
+  g.save();g.translate(cx,cy);g.scale(sc,sc);
+  if(kind==='open'){box(-20,-20,40,40,10,'#fff','#9bb0c0',3)}
+  else{
+    box(-20,-20,40,40,10,kind==='ok'?'#16835d':kind==='bad'?'#c9372c':'#7d93a5');
+    g.strokeStyle='#fff';g.fillStyle='#fff';g.lineCap='round';g.lineJoin='round';g.lineWidth=5;
+    g.beginPath();
+    if(kind==='ok'){g.moveTo(-9,1);g.lineTo(-2,8);g.lineTo(10,-8)}
+    else if(kind==='bad'){g.moveTo(0,-11);g.lineTo(0,3)}
+    else{g.moveTo(-9,0);g.lineTo(9,0)}
+    g.stroke();
+    if(kind==='bad'){g.beginPath();g.arc(0,10,3.2,0,6.29);g.fill()}
+  }
+  g.restore();
+}
+const dmy=d=>/^\d{4}-\d\d-\d\d$/.test(d||'')?d.split('-').reverse().join('/'):(d||'');
+function verdictInfo(r){
+  if(r.bad>0)return{txt:`${r.bad} בעיות פתוחות`,fg:'#c9372c',bg:'#fde4e1'};
+  if(r.openCrit>0)return{txt:`${r.openCrit} סעיפים קריטיים ממתינים`,fg:'#b7791f',bg:'#fff3da'};
+  if(r.open>0)return{txt:`${r.open} סעיפים לא נבדקו`,fg:'#b7791f',bg:'#fff3da'};
+  return{txt:'הכל נבדק, מוכן לאישור',fg:'#16835d',bg:'#dcf5ea'};
+}
+function pdfSectionHead(title,badge,count,color){
+  ensure(60+60);
+  box(M,py,CW,60,12,'#dff3ff');
+  const bx=PW-M-14-40;
+  box(bx,py+10,40,40,10,color);
+  txt(badge,bx+20,py+39,24,'#fff','bold','center');
+  txt(title,bx-16,py+40,30,'#124b78','bold');
+  if(count)txt(count,M+18,py+39,22,'#668197','normal','left');
+  py+=60+4;
+}
+function measureRow(it){
+  const left=M+14+(it.c?96:0),right=PW-M-14-40-18,tw=right-left;
+  const tl=wrap(it.t,tw,25);
+  const note=(S.notes[it.id]||'').trim(),nl=note?wrap(note,tw-30,22):[];
+  const h=Math.max(48,tl.length*36)+(nl.length?nl.length*31+10:0)+20;
+  return{tl,nl,h,right};
+}
+function drawRow(it,m){
+  ensure(m.h);
+  const s=S.st[it.id],top=py,ty=top+10;
+  if(s==='bad')box(M+2,top,CW-4,m.h,10,'#fff4f2');
+  icon(s||'open',PW-M-14-20,ty+22,1);
+  if(it.c){box(M+14,ty+4,80,32,8,'#fde4e1');txt('קריטי',M+14+40,ty+27,20,'#c9372c','bold','center')}
+  const col=s==='bad'?'#8f2219':s==='ok'?'#5f8196':s==='na'?'#8fa3b2':'#18364d';
+  m.tl.forEach((l,i)=>txt(l,m.right,ty+27+i*36,25,col,s==='bad'?'bold':'normal'));
+  if(m.nl.length){
+    const ny=ty+m.tl.length*36+4;
+    g.fillStyle='#9ec6e0';g.fillRect(m.right-4,ny,4,m.nl.length*31);
+    m.nl.forEach((l,i)=>txt(l,m.right-18,ny+23+i*31,22,'#44667d'));
+  }
+  g.fillStyle='#e6eff5';g.fillRect(M,top+m.h-1,CW,1.5);
+  py+=m.h;
+}
+function renderPages(){
+  pdfPages=[];newPage();
+  const r=stats(),done=r.ok+r.na,pct=r.total?Math.round(done/r.total*100):0,V=verdictInfo(r);
+
+  /* כותרת */
+  rrect(M,py,CW,150,24);
+  const gr=g.createLinearGradient(M,0,PW-M,0);gr.addColorStop(0,'#42b5ef');gr.addColorStop(1,'#0e6eaf');
+  g.fillStyle=gr;g.fill();
+  txt('טופס בקרת איכות למתכנת מטבחים',PW-M-36,py+70,46,'#fff','bold');
+  txt('דוח בדיקה לפני אישור התוכנית והעברה לייצור',PW-M-36,py+116,25,'#e9f7ff');
+  py+=150+24;
+
+  /* פרטי הזמנה */
+  const cw=(CW-3*14)/4;
+  [['שם הלקוח',S.meta.client],['מספר הזמנה',S.meta.order],['שם המתכנת',S.meta.programmer],['תאריך',dmy(S.meta.date)]].forEach(([l,v],k)=>{
+    const x=PW-M-(k+1)*cw-k*14;
+    box(x,py,cw,88,14,'#fff','#cfe5f3',2);
+    txt(l,x+cw-16,py+30,20,'#668197','bold');
+    const f=fit(v||'—',cw-32,28,'bold',18);
+    txt(f.s,x+cw-16,py+68,f.z,v?'#18364d':'#9bb0c0','bold');
+  });
+  py+=88+24;
+
+  /* מאפייני המטבח */
+  const act=CHIPS.filter(([k])=>S.profile[k]);
+  if(act.length){
+    ensure(170);
+    txt('מאפייני המטבח',PW-M,py+26,24,'#124b78','bold');py+=44;
+    let x=PW-M;
+    act.forEach(([k,l])=>{
+      setFont(22);const w=g.measureText(l).width+40;
+      if(x-w<M){x=PW-M;py+=52}
+      box(x-w,py,w,42,21,'#1479bd');txt(l,x-w/2,py+29,22,'#fff','normal','center');x-=w+10;
+    });
+    py+=42+24;
+  }
+
+  /* סיכום */
+  ensure(240);
+  box(M,py,CW,206,18,'#fff','#cfe5f3',2);
+  const cr=PW-M-24;
+  txt(`${done} מתוך ${r.total} סעיפים הושלמו (${pct}%)`,cr,py+44,30,'#18364d','bold');
+  setFont(22,'bold');const vw=g.measureText(V.txt).width+44;
+  box(M+24,py+14,vw,40,20,V.bg);txt(V.txt,M+24+vw/2,py+42,22,V.fg,'bold','center');
+  box(M+24,py+74,CW-48,16,8,'#e4f2fb');
+  if(pct>0){const bw=(CW-48)*pct/100;rrect(PW-M-24-bw,py+74,bw,16,8);g.fillStyle='#1686ca';g.fill()}
+  txt(`תקין ${r.ok}  |  לא רלוונטי ${r.na}  |  בעיות ${r.bad}  |  לא נבדקו ${r.open}`,cr,py+130,24,'#445f73');
+  let lx=cr;
+  [['ok','תקין'],['bad','בעיה'],['na','לא רלוונטי'],['open','לא נבדק']].forEach(([k,l])=>{
+    icon(k,lx-12,py+170,.55);setFont(21);const w=g.measureText(l).width;
+    txt(l,lx-30,py+177,21,'#668197');lx-=30+w+26;
+  });
+  py+=206+26;
+
+  /* בעיות פתוחות */
+  if(r.bads.length){
+    pdfSectionHead('בעיות פתוחות','!',String(r.bads.length),'#c9372c');
+    r.bads.forEach(it=>drawRow(it,measureRow(it)));
+    py+=24;
+  }
+
+  /* סכומון קירות */
+  const walls=S.walls.filter(w=>w.name||w.len||w.units);
+  if(walls.length){
+    pdfSectionHead('סכומון קירות','↔','','#1479bd');
+    walls.forEach(w=>{
+      const c=calcWall(w);ensure(52);
+      const nm=fit(w.name||'קיר',230,25,'bold',18);
+      txt(nm.s,PW-M-14,py+34,nm.z,'#18364d','bold');
+      const col=c.state==='ok'?'#16835d':c.state==='bad'?'#c9372c':'#668197';
+      const f=fit(c.text,CW-300,23,'normal',16);
+      txt(f.s,PW-M-14-250,py+34,f.z,col,c.state==='bad'?'bold':'normal');
+      g.fillStyle='#e6eff5';g.fillRect(M,py+51,CW,1.5);py+=52;
+    });
+    py+=24;
+  }
+
+  /* סעיפי הבדיקה */
+  SECTIONS.forEach((sec,si)=>{
+    const mine=items.filter(i=>i.si===si&&relevant(i));
+    if(!mine.length)return;
+    const d=mine.filter(i=>S.st[i.id]==='ok'||S.st[i.id]==='na').length;
+    const first=measureRow(mine[0]);
+    ensure(64+first.h);
+    pdfSectionHead(sec.title,String(si+1),`${d}/${mine.length}`,d===mine.length?'#16835d':'#1479bd');
+    mine.forEach(it=>drawRow(it,measureRow(it)));
+    py+=22;
+  });
+
+  /* הערות כלליות */
+  const gen=(S.general||'').trim();
+  if(gen){
+    const lines=wrap(gen,CW-40,24);
+    ensure(60+34);
+    txt('הערות כלליות',PW-M,py+30,28,'#124b78','bold');py+=48;
+    lines.forEach(l=>{ensure(34);txt(l,PW-M-16,py+24,24,'#18364d');py+=34});
+    py+=20;
+  }
+
+  /* אישור */
+  const hh=S.approved?270:200;
+  ensure(hh+20);
+  box(M,py,CW,hh,18,'#fff','#cfe5f3',2);
+  txt('אישור המתכנת והעברה לייצור',PW-M-24,py+52,30,'#124b78','bold');
+  let yy=py+76;
+  if(S.approved){
+    box(M+24,yy,CW-48,60,12,'#dcf5ea','#a9dcc5',2);
+    txt(`אושר לייצור על ידי ${S.approved.name}  |  ${S.approved.time}`,PW-M-44,yy+39,26,'#16835d','bold');
+    yy+=80;
+  }
+  const sw=(CW-48-60)/3;
+  ['שם המאשר','חתימה','תאריך'].forEach((l,k)=>{
+    const x=PW-M-24-k*(sw+30);
+    txt(l,x,yy+34,22,'#668197','bold');
+    g.fillStyle='#8eacbf';g.fillRect(x-sw,yy+92,sw,2);
+    if(k===0&&S.signer)txt(S.signer,x-4,yy+80,26,'#18364d','normal');
+    if(k===2&&S.approved)txt(S.approved.time.split(',')[0],x-4,yy+80,26,'#18364d','normal');
+  });
+
+  /* כותרת תחתונה לכל עמוד */
+  const total=pdfPages.length;
+  pdfPages.forEach((c,i)=>{
+    g=c.getContext('2d');g.direction='rtl';
+    g.fillStyle='#cfe5f3';g.fillRect(M,PH-70,CW,2);
+    const who=[S.meta.client,S.meta.order?'הזמנה '+S.meta.order:''].filter(Boolean).join('  |  ');
+    if(who)txt(who,PW-M,PH-34,22,'#668197');
+    txt(`עמוד ${i+1} מתוך ${total}`,M,PH-34,22,'#668197','normal','left');
+  });
+}
+
+function buildPdf(imgs){
+  const enc=new TextEncoder(),parts=[],offs=[];let off=0;
+  const push=d=>{const b=typeof d==='string'?enc.encode(d):d;parts.push(b);off+=b.length};
+  const n=imgs.length,total=2+3*n;
+  push('%PDF-1.4\n%âãÏÓ\n');
+  const obj=(num,body)=>{offs[num]=off;push(`${num} 0 obj\n${body}\nendobj\n`)};
+  obj(1,'<< /Type /Catalog /Pages 2 0 R >>');
+  obj(2,`<< /Type /Pages /Count ${n} /Kids [${imgs.map((_,i)=>`${3+3*i} 0 R`).join(' ')}] >>`);
+  imgs.forEach((im,i)=>{
+    const pg=3+3*i,ct=4+3*i,ig=5+3*i,cs='q 595.28 0 0 841.89 0 0 cm /Im0 Do Q';
+    obj(pg,`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595.28 841.89] /Resources << /XObject << /Im0 ${ig} 0 R >> >> /Contents ${ct} 0 R >>`);
+    obj(ct,`<< /Length ${cs.length} >>\nstream\n${cs}\nendstream`);
+    offs[ig]=off;
+    push(`${ig} 0 obj\n<< /Type /XObject /Subtype /Image /Width ${im.w} /Height ${im.h} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${im.d.length} >>\nstream\n`);
+    push(im.d);push('\nendstream\nendobj\n');
+  });
+  const xo=off;
+  push(`xref\n0 ${total+1}\n0000000000 65535 f \n`);
+  for(let i=1;i<=total;i++)push(String(offs[i]).padStart(10,'0')+' 00000 n \n');
+  push(`trailer\n<< /Size ${total+1} /Root 1 0 R >>\nstartxref\n${xo}\n%%EOF`);
+  return new Blob(parts,{type:'application/pdf'});
+}
+const fileBase=()=>('בקרת-איכות-'+(S.meta.order||S.meta.client||'מטבח')+'-'+(S.meta.date||today())).replace(/[\\/:*?"<>|\s]+/g,'-');
+async function makePdf(){
+  renderPages();
+  const imgs=[];
+  for(const c of pdfPages){
+    const b=await new Promise(res=>c.toBlob(res,'image/jpeg',0.92));
+    imgs.push({d:new Uint8Array(await b.arrayBuffer()),w:c.width,h:c.height});
+  }
+  return{blob:buildPdf(imgs),name:fileBase()+'.pdf'};
+}
+
+/* ---------- חלון הדפסה ושליחה ---------- */
+let pdfP=null;
+const mstat=$('#mstat');
+const AB=window.AndroidBridge||null;
+function b64(blob){return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(String(r.result).split(',')[1]);r.onerror=rej;r.readAsDataURL(blob)})}
+function dl(blob,name){
+  if(AB){b64(blob).then(d=>AB.saveFile(d,name,blob.type||'application/octet-stream'));return}
+  const u=URL.createObjectURL(blob),a=document.createElement('a');
+  a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();
+  setTimeout(()=>URL.revokeObjectURL(u),3000);
+}
+function normPhone(v){let d=String(v||'').replace(/\D/g,'');if(d.startsWith('00'))d=d.slice(2);else if(d.startsWith('0'))d='972'+d.slice(1);return d}
+function shareText(){
+  const r=stats(),V=verdictInfo(r);
+  return `דוח בקרת איכות מטבח${S.meta.client?' - '+S.meta.client:''}${S.meta.order?' (הזמנה '+S.meta.order+')':''}\nסטטוס: ${V.txt}\n${r.ok+r.na} מתוך ${r.total} סעיפים הושלמו`;
+}
+function openModal(){
+  $('#modal').hidden=false;$('#waPhone').value=S.phone||'';
+  mstat.textContent='מכין PDF...';
+  pdfP=makePdf();
+  pdfP.then(r=>{mstat.textContent=`ה-PDF מוכן (${Math.round(r.blob.size/1024)} KB, ${pdfPages.length} עמודים)`})
+      .catch(()=>{mstat.textContent='לא הצלחתי להכין PDF. אפשר להשתמש בהדפסה ולשמור כ-PDF.'});
+  $('#mShare').focus();
+}
+const closeModal=()=>{$('#modal').hidden=true};
+$('#btnShare').onclick=openModal;
+$('#mClose').onclick=closeModal;
+$('#modal').addEventListener('click',e=>{if(e.target.id==='modal')closeModal()});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('#modal').hidden)closeModal()});
+$('#waPhone').oninput=e=>{S.phone=e.target.value;save()};
+$('#mDl').onclick=async()=>{
+  try{const r=await pdfP;dl(r.blob,r.name);mstat.textContent='ה-PDF ירד למכשיר'}catch(e){}
+};
+function doPrint(){
+  if(AB){filter='all';sync();document.querySelectorAll('.inote.has').forEach(grow);AB.printPage()}
+  else window.print();
+}
+$('#mPrint').onclick=()=>{closeModal();setTimeout(doPrint,150)};
+$('#mShare').onclick=async()=>{
+  let r;try{r=await pdfP}catch(e){return}
+  if(AB){AB.shareFile(await b64(r.blob),r.name,'application/pdf',shareText());return}
+  const file=new File([r.blob],r.name,{type:'application/pdf'});
+  if(navigator.canShare&&navigator.canShare({files:[file]})){
+    try{await navigator.share({files:[file],title:'דוח בקרת איכות מטבח',text:shareText()});return}
+    catch(e){if(e&&e.name==='AbortError')return}
+  }
+  dl(r.blob,r.name);
+  mstat.innerHTML='השיתוף הישיר לא נתמך במכשיר הזה. ה-PDF ירד, והוא מצורף ידנית ב-WhatsApp. <a href="https://wa.me/?text='+encodeURIComponent(shareText())+'" target="_blank" rel="noopener">פתח WhatsApp</a>';
+};
+$('#mWa').onclick=async()=>{
+  let r;try{r=await pdfP}catch(e){return}
+  dl(r.blob,r.name);
+  const ph=normPhone($('#waPhone').value);
+  const url=`https://wa.me/${ph}?text=${encodeURIComponent(shareText()+'\n(קובץ ה-PDF מצורף)')}`;
+  const w=window.open(url,'_blank','noopener');
+  if(AB){mstat.textContent='ה-PDF נשמר בהורדות. צרף אותו בשיחת WhatsApp שנפתחה.';return}
+  mstat.innerHTML=w?'ה-PDF ירד. צרף אותו בשיחת WhatsApp שנפתחה.':`ה-PDF ירד. <a href="${url}" target="_blank" rel="noopener">לחץ לפתיחת WhatsApp</a> וצרף את הקובץ.`;
+};
+
+/* ---------- אתחול ---------- */
+function initUI(){
+  $('#chips').innerHTML=CHIPS.map(([k,l])=>`<button class="chip" data-k="${k}" aria-pressed="false">${l}</button>`).join('');
+  ['client','order','programmer','date'].forEach(k=>{$('#'+k).value=S.meta[k]||''});
+  $('#general').value=S.general||'';$('#signer').value=S.signer||'';
+  build();renderWalls();sync();
+}
+load();initUI();
+</script>
+</body>
+</html>
